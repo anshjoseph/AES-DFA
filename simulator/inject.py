@@ -34,4 +34,4 @@ if __name__ == '__main__':
   key = v[1]
   c = encrypt(p,key)
   ct = encrypt(p,key,fault=v[2],floc=int(sys.argv[2]))
-  print "{:032x} {:032x}".format(c,ct)
+  print ("{:032x} {:032x}".format(c,ct))

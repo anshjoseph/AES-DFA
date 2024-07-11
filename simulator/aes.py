@@ -6,6 +6,7 @@
 # injections in round 8.
 # expk are already expanded keys reconstructed from the fault analysis.
 #
+
 def encrypt(p,k=None,expk=None,fault=0x00,floc=0):
   plaintext = to_matrix(p)
   if expk == None:
@@ -15,7 +16,7 @@ def encrypt(p,k=None,expk=None,fault=0x00,floc=0):
   state = add_roundkey(plaintext, get_roundkey(expanded_key,0))
   for r in range(1,10):
     if (r == 8):
-      state[ floc % 4 ][ floc / 4 ] ^= fault # fault injection
+      state[ floc % 4 ][ floc // 4 ] ^= fault # fault injection
     state = add_roundkey( mixcolumns(shiftrows( subbytes(state))), get_roundkey(expanded_key,r))
   # final round
   return to_bitstring( add_roundkey(shiftrows( subbytes(state)), get_roundkey(expanded_key,10)))
@@ -23,10 +24,10 @@ def encrypt(p,k=None,expk=None,fault=0x00,floc=0):
 def decrypt(c,k):
   ciphertext = to_matrix(c)
   expanded_key = expandkey(k)
-  state = inv_subbytes(invShiftRows( add_roundkey(ciphertext, get_roundkey(expanded_key,10))))
+  state = inv_subbytes(inv_shiftrows( add_roundkey(ciphertext, get_roundkey(expanded_key,10))))
   for r in range(9,0,-1):
     roundKey = get_roundkey(expanded_key,r)
-    state = inv_subbytes(invShiftRows(inv_mixcolumns( add_roundkey(state,roundKey))))
+    state = inv_subbytes(inv_shiftrows(inv_mixcolumns( add_roundkey(state,roundKey))))
   return to_bitstring(add_roundkey(state, get_roundkey(expanded_key,0)))
 
 def add_roundkey(state,roundKey):
@@ -37,14 +38,14 @@ def add_roundkey(state,roundKey):
 
 def get_roundkey(expanded_key,r):
   key = 0
-  for i in xrange(4):
+  for i in range(4):
     key ^= expanded_key[4*r+i] << 96-32*i
   return to_matrix(key)
 
 def ks_core(t,r):
   b = ((t << 8) & 0xffffffff) ^ (t >> 24)
   c = rcon[r] << 24
-  for i in xrange(4):
+  for i in range(4):
     c ^= sbox[(b >> 24 - 8*i) & 0xff] << 24 - 8*i
   return c
 
@@ -53,8 +54,8 @@ def expandkey(key):
   Nk = 4
   Nr = 10
   rconi = 1
-  expanded_key = [(key >> 96-32*i) & 0xffffffff for i in xrange(4)]
-  for i in xrange(Nk,Nb * (Nr + 1)):
+  expanded_key = [(key >> 96-32*i) & 0xffffffff for i in range(4)]
+  for i in range(Nk,Nb * (Nr + 1)):
     t = expanded_key[i-1]
     if (i % Nk == 0):
       t = ks_core(t,rconi)
@@ -199,29 +200,32 @@ rcon = [
 
 def to_matrix(s):
   m = []
-  for i in xrange(4):
-    m.append([(s >> (120-8*(4*j+i))) & 0xff for j in xrange(4)])
+  for i in range(4):
+    m.append([(s >> (120-8*(4*j+i))) & 0xff for j in range(4)])
   return m
 
 def to_bitstring(s):
   m = 0
-  for i in xrange(len(s)):
-    for j in xrange(len(s[i])):
+  for i in range(len(s)):
+    for j in range(len(s[i])):
       m ^= s[i][j] << (120-8*(4*j+i))
   return m
 
 def printmatrix(m):
-  for i in xrange(4):
-    for j in xrange(4):
-      print "{:02x} ".format(m[i][j]),
-    print ""
-  print ""
+  for i in range(4):
+    for j in range(4):
+      print("{:02x} ".format(m[i][j]),)
+    print ("")
+  print ("")
 
 def printkeys(keys):
-  for i in xrange(len(keys)):
-    print "{:08x}".format(keys[i])
-  print ""
+  for i in range(len(keys)):
+    print ("{:08x}".format(keys[i]))
+  print ("")
 
+
+#----------------------------------------------------------------------------
+# NO USE
 def test_aes():
 
  # KEY, PLAINTEXT, CIPHERTEXT
@@ -240,7 +244,7 @@ def test_aes():
   for e in L:
     assert e[2] == encrypt(e[1],e[0])
 
-  print "All tests passed."
+  print("All tests passed.")
 
 if __name__ == '__main__':
   test_aes()
