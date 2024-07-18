@@ -125,10 +125,20 @@ def generate_inverse_sbox(sbox):
         inv_sbox[sbox[i]] = i
     
     return inv_sbox
-__sbox = SBOX(sbox)
+def cvt_8bit_bin(num:int):
+    ret = []
+    for _ in range(8):
+        ret.append(num%2)
+        num = num // 2
+    return ret[::-1]
+transpose = lambda _sbox_bin:  [[_sbox_bin[j][i] for j in range(len(_sbox_bin))] for i in range(len(_sbox_bin[0]))]
+cvt_bin_8bit = lambda _val_list: sum([val * (2**idx) for idx, val in enumerate(_val_list[::-1])])
+sbox_bin = [cvt_8bit_bin(v) for v in sbox]
+t_sbox_bin = transpose(sbox_bin)
+__sbox = SBOX(t_sbox_bin)
 def encrypt(p,k=None,expk=None,fault=0x00,floc=0):
-  _k = k & (2**9 - 1)
-  _sbox = __sbox.get(_k)
+  _k = k & (2**4 - 1)
+  _sbox = [cvt_bin_8bit(i) for i in transpose(__sbox.get(_k))]
   _invsbox = generate_inverse_sbox(_sbox)
   plaintext = to_matrix(p)
   if expk == None:
@@ -144,8 +154,8 @@ def encrypt(p,k=None,expk=None,fault=0x00,floc=0):
   return to_bitstring( add_roundkey(shiftrows( subbytes(state,get_roundkey(expanded_key,10),_sbox)), get_roundkey(expanded_key,10)))
 
 def decrypt(c,k):
-  _k = k & (2**9 - 1)
-  _sbox = __sbox.get(_k)
+  _k = k & (2**4 - 1)
+  _sbox = [cvt_bin_8bit(i) for i in transpose(__sbox.get(_k))]
   _invsbox = generate_inverse_sbox(_sbox)
   ciphertext = to_matrix(c)
   expanded_key = expandkey(k)
